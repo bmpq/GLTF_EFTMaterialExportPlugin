@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GLTF_EFTMaterialExportPlugin", "GLTF_EFTMaterialExportPlugin.csproj", "{E83DEBB3-AC72-4946-BA25-54FBDDD1F5AA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7F6974E3-C54E-40D3-A846-098338CB77A3} = {7F6974E3-C54E-40D3-A846-098338CB77A3}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnityGLTF", "..\bmpq-UnityGLTF\Runtime\UnityGLTF.csproj", "{7F6974E3-C54E-40D3-A846-098338CB77A3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		RUNTIME|Any CPU = RUNTIME|Any CPU
+		UNITY_EDITOR|Any CPU = UNITY_EDITOR|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E83DEBB3-AC72-4946-BA25-54FBDDD1F5AA}.RUNTIME|Any CPU.ActiveCfg = RUNTIME|Any CPU
+		{E83DEBB3-AC72-4946-BA25-54FBDDD1F5AA}.RUNTIME|Any CPU.Build.0 = RUNTIME|Any CPU
+		{E83DEBB3-AC72-4946-BA25-54FBDDD1F5AA}.UNITY_EDITOR|Any CPU.ActiveCfg = UNITY_EDITOR|Any CPU
+		{E83DEBB3-AC72-4946-BA25-54FBDDD1F5AA}.UNITY_EDITOR|Any CPU.Build.0 = UNITY_EDITOR|Any CPU
+		{7F6974E3-C54E-40D3-A846-098338CB77A3}.RUNTIME|Any CPU.ActiveCfg = RUNTIME|Any CPU
+		{7F6974E3-C54E-40D3-A846-098338CB77A3}.RUNTIME|Any CPU.Build.0 = RUNTIME|Any CPU
+		{7F6974E3-C54E-40D3-A846-098338CB77A3}.UNITY_EDITOR|Any CPU.ActiveCfg = UNITY_EDITOR|Any CPU
+		{7F6974E3-C54E-40D3-A846-098338CB77A3}.UNITY_EDITOR|Any CPU.Build.0 = UNITY_EDITOR|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E879D8D3-B7B4-415B-BFF4-8E691FDC278D}
+	EndGlobalSection
+EndGlobal

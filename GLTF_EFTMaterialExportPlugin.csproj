@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>GLTF_EFTMaterialExportPlugin</AssemblyName>
+    <Version>1.0.0</Version>
+    <LangVersion>9.0</LangVersion>
+    <Configurations>UNITY_EDITOR;RUNTIME</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SPTPath>E:\Games\SPT_3.11</SPTPath>
+    <UnityEditorPath>T:\extract\UNITYPROJECT_EFT35392\Assets\GLTF_EFTMaterialExportPlugin</UnityEditorPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\bmpq-UnityGLTF\Runtime\UnityGLTF.csproj" />
+    
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.43" IncludeAssets="compile" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <Target Name="CopyDllToUnityEditor" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='UNITY_EDITOR|AnyCPU'">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(UnityEditorPath)" />
+  </Target>
+  <Target Name="CopyDllToSpt" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='RUNTIME|AnyCPU'">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(SPTPath)\BepInEx\plugins\tarkin\ItemExporter" />
+  </Target>
+  
+  <Target Name="CopyBundleDir" AfterTargets="Build" Condition="'$(Configuration)|$(Platform)'=='UNITY_EDITOR|AnyCPU'">
+    <ItemGroup>
+      <BundleFiles Include="Resources\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BundleFiles)" DestinationFolder="$(UnityEditorPath)\Resources\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
