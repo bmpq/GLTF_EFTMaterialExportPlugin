@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnityGLTF
 {
@@ -16,6 +17,51 @@ namespace UnityGLTF
 
     public static class TextureConverter
     {
+        private static Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
+
+#if RUNTIME
+        public static void InjectBundleShaders(Shader[] bundleShaders)
+        {
+            if (bundleShaders == null) return;
+            shaders.Clear();
+
+            foreach (var shader in bundleShaders)
+            {
+                if (shader != null)
+                    shaders.Add(shader.name, shader);
+            }
+        }
+#endif
+
+        private static Shader GetShader(string shaderName)
+        {
+#if UNITY_EDITOR
+            Shader shader = Shader.Find(shaderName);
+            if (shader == null)
+            {
+                Debug.Log(shaderName + " not found in Shaders");
+
+                shaderName = shaderName.Replace("Hidden/Blit/", "");
+                shader = Resources.Load<Shader>(shaderName);
+                if (shader == null)
+                    Debug.Log(shaderName + " not found in Resources");
+            }
+            return shader;
+#elif RUNTIME
+            if (shaders.Count == 0)
+            {
+                Debug.LogError($"[TextureConverter] Shader dictionary is not initialized. Was InjectFromBundle called?");
+                return null;
+            }
+
+            if (shaders.TryGetValue(shaderName, out Shader shader))
+                return shader;
+
+            Debug.LogError($"[TextureConverter] Shader '{shaderName}' not found in the injected bundle.");
+            return null;
+#endif
+        }
+
         public static Texture2D Convert(Texture inputTexture, Material mat, string addTag = null)
         {
             if (inputTexture == null)
@@ -41,7 +87,7 @@ namespace UnityGLTF
 
         public static Texture2D ConvertAlbedoSpecGlosToSpecGloss(Texture inputTextureAlbedoSpec, Texture inputTextureGloss)
         {
-            Material mat = new Material(Shader.Find("Hidden/Blit/AlbedoSpecGlosToSpecGloss"));
+            Material mat = new Material(GetShader("Hidden/Blit/AlbedoSpecGlosToSpecGloss"));
             mat.SetTexture("_AlbedoSpecTex", inputTextureAlbedoSpec);
             mat.SetTexture("_GlossinessTex", inputTextureGloss);
 
@@ -65,7 +111,7 @@ namespace UnityGLTF
         {
             if (inputTexture == null) return null;
 
-            Material mat = new Material(Shader.Find("Hidden/Blit/Invert"));
+            Material mat = new Material(GetShader("Hidden/Blit/Invert"));
             mat.SetTexture("_MainTex", inputTexture);
 
             bool sRGBWrite = GL.sRGBWrite;
@@ -85,7 +131,7 @@ namespace UnityGLTF
 
         public static Texture2D CombineR(Texture texR, Texture texG, Texture texB, Texture texA)
         {
-            Material mat = new Material(Shader.Find("Hidden/Blit/CombineR"));
+            Material mat = new Material(GetShader("Hidden/Blit/CombineR"));
             mat.SetTexture("_RTex", texR);
             mat.SetTexture("_GTex", texG);
             mat.SetTexture("_BTex", texB);
@@ -110,7 +156,7 @@ namespace UnityGLTF
 
         public static Texture2D Invert(Texture tex, bool invertAlpha = true)
         {
-            Shader shaderInvert = Shader.Find("Hidden/Blit/Invert");
+            Shader shaderInvert = GetShader("Hidden/Blit/Invert");
             Material mat = new Material(shaderInvert);
             mat.SetTexture("_MainTex", tex);
 
@@ -132,7 +178,7 @@ namespace UnityGLTF
 
         public static Texture2D ChannelToGrayscale(Texture tex, int channel)
         {
-            Material mat = new Material(Shader.Find("Hidden/Blit/ChannelToGrayscale"));
+            Material mat = new Material(GetShader("Hidden/Blit/ChannelToGrayscale"));
 
             mat.SetTexture("_MainTex", tex);
             mat.SetInt("_ChannelSelect", channel);
@@ -153,7 +199,7 @@ namespace UnityGLTF
 
         public static Texture2D BlendOverlay(Texture2D texBase, Texture2D texTop, Texture2D texMask, float factor)
         {
-            Material mat = new Material(Shader.Find("Hidden/Blit/BlendOverlay"));
+            Material mat = new Material(GetShader("Hidden/Blit/BlendOverlay"));
             mat.SetTexture("_MainTex", texBase);
             mat.SetTexture("_TopTex", texTop);
             mat.SetTexture("_MaskTex", texMask);
@@ -175,7 +221,7 @@ namespace UnityGLTF
 
         public static Texture2D FillAlpha(Texture tex, float alpha = 1.0f)
         {
-            Material mat = new Material(Shader.Find("Hidden/Blit/FillAlpha"));
+            Material mat = new Material(GetShader("Hidden/Blit/FillAlpha"));
 
             return Convert(tex, mat);
         }
