@@ -19,6 +19,10 @@ namespace UnityGLTF.Plugins
 	
 	public class TarkovMaterialExportContext : GLTFExportPluginContext
     {
+        private const string TEXNAME_POSTFIX_SPECULAR = "_SPEC";
+        private const string TEXNAME_POSTFIX_METALLICROUGHNESS = "_METROUGH";
+        private const string TEXNAME_POSTFIX_TRANSMISSION = "_TRANSMISSION";
+
         public override void AfterSceneExport(GLTFSceneExporter _, GLTFRoot __)
 		{
 			RenderTexture.active = null;
@@ -48,7 +52,7 @@ namespace UnityGLTF.Plugins
 
                 Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
                 Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
-                texMetRough.name = texGlos.name + "_METROUGH";
+                texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_SpecMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 Texture2D texAlbedo = TextureConverter.FillAlpha(texAlbedoSpec, 1f);
@@ -65,7 +69,7 @@ namespace UnityGLTF.Plugins
                 KHRspecular.specularFactor = floatSpec;
                 KHRspecular.specularColorFactor = colorSpec.ToNumericsColorLinear();
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
-                texSpec.name = texAlbedoSpec.name + "_SPEC";
+                texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
                 KHRspecular.specularTexture = exporter.ExportTextureInfoWithTextureTransform(material, texSpec, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 float floatGlos = material.GetFloat("_Specularness");
@@ -133,7 +137,7 @@ namespace UnityGLTF.Plugins
 
                 Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
                 Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
-                texMetRough.name = texGlos.name + "_METROUGH";
+                texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, TransparentCutoff ? "_MainTex" : "_SpecMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 Texture2D texAlbedo = TextureConverter.FillAlpha(texAlbedoSpec, 1f);
@@ -168,7 +172,7 @@ namespace UnityGLTF.Plugins
                 KHRspecular.specularFactor = floatSpec;
                 KHRspecular.specularColorFactor = colorSpec.ToNumericsColorLinear();
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
-                texSpec.name = texAlbedoSpec.name + "_SPEC";
+                texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
                 KHRspecular.specularTexture = exporter.ExportTextureInfoWithTextureTransform(material, texSpec, TransparentCutoff ? "_SpecMap" : "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 float floatGlos = material.GetFloat("_Specularness");
@@ -223,7 +227,7 @@ namespace UnityGLTF.Plugins
                 pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, texAlbedoSpec, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
 
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
-                texSpec.name = texAlbedoSpec.name + "_SPEC";
+                texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
                 KHRspecular.specularTexture = exporter.ExportTextureInfoWithTextureTransform(material, texSpec, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 Color colorSpec = material.GetColor("_SpecColor");
@@ -321,16 +325,9 @@ namespace UnityGLTF.Plugins
             {
                 var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
-                Material channelMixer = new Material(Shader.Find("Hidden/Blit/ChannelMixer"));
-                Texture2D texMain = TextureConverter.Invert(material.GetTexture("_MainTex"));
-                channelMixer.SetTexture("_TexFirst", texMain);
-                channelMixer.SetTexture("_TexSecond", Texture2D.whiteTexture);
-                channelMixer.SetFloat("_SourceR", (int)ChannelSource.TexFirst_Alpha);
-                channelMixer.SetFloat("_SourceG", (int)ChannelSource.TexFirst_Alpha);
-                channelMixer.SetFloat("_SourceB", (int)ChannelSource.TexFirst_Alpha);
-                channelMixer.SetFloat("_SourceA", (int)ChannelSource.TexSecond_Red);
-                Texture2D texTransmission = TextureConverter.Convert(texMain, channelMixer, "TRANSMISSION");
+                Texture2D texTransmission = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
                 texTransmission = TextureConverter.Invert(texTransmission);
+                texTransmission.name += TEXNAME_POSTFIX_TRANSMISSION;
 
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
                 pbr.BaseColorFactor.A = 1f;
@@ -340,7 +337,7 @@ namespace UnityGLTF.Plugins
 
                 KHR_materials_transmission transmission = new KHR_materials_transmission();
                 transmission.transmissionFactor = 1f;
-                transmission.transmissionTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMain, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                transmission.transmissionTexture = exporter.ExportTextureInfoWithTextureTransform(material, texTransmission, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
                 exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
                 if (materialNode.Extensions == null)
@@ -364,24 +361,15 @@ namespace UnityGLTF.Plugins
 
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
 
-                Material setAlpha = new Material(Shader.Find("Hidden/Blit/SetAlphaFromTexture"));
-                if (material.HasTexture("_CutoutMask"))
-                    setAlpha.SetTexture("_AlphaTex", material.GetTexture("_CutoutMask"));
-                else
-                    setAlpha.SetTexture("_AlphaTex", Texture2D.whiteTexture);
-                Texture mainTex = TextureConverter.Convert(material.GetTexture("_MainTex"), setAlpha);
+                Texture texWithAlpha = material.HasTexture("_CutoutMask") ? material.GetTexture("_CutoutMask") : Texture2D.whiteTexture;
+                Texture2D mainTex = TextureConverter.OverrideAlpha(material.GetTexture("_MainTex"), texWithAlpha);
+
                 pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, mainTex, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
                 materialNode.AlphaMode = AlphaMode.MASK;
 
-                Material channelMixer = new Material(Shader.Find("Hidden/Blit/ChannelMixer"));
                 Texture2D texRoughness = TextureConverter.Invert(material.GetTexture("_GlossMap"));
-                channelMixer.SetTexture("_TexFirst", texRoughness);
-                channelMixer.SetTexture("_TexSecond", Texture2D.whiteTexture);
-                channelMixer.SetFloat("_SourceR", (int)ChannelSource.TexSecond_Red);
-                channelMixer.SetFloat("_SourceG", (int)ChannelSource.TexFirst_Red);
-                channelMixer.SetFloat("_SourceB", (int)ChannelSource.TexSecond_Red);
-                channelMixer.SetFloat("_SourceA", (int)ChannelSource.TexSecond_Red);
-                Texture2D texMetallicRoughness = TextureConverter.Convert(material.GetTexture("_GlossMap"), channelMixer, "MR");
+                Texture2D texMetallicRoughness = TextureConverter.PackGrayscaleTextureToOneChannel(texRoughness, 1);
+                texMetallicRoughness.name += TEXNAME_POSTFIX_METALLICROUGHNESS;
 
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetallicRoughness, "_GlossMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
@@ -431,14 +419,7 @@ namespace UnityGLTF.Plugins
             {
                 var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0 };
 
-                Material channelMixer = new Material(Shader.Find("Hidden/Blit/ChannelMixer"));
-                Texture2D texMain = material.GetTexture("_MainTex") as Texture2D;
-                channelMixer.SetTexture("_TexFirst", texMain);
-                channelMixer.SetTexture("_TexSecond", Texture2D.whiteTexture);
-                channelMixer.SetFloat("_SourceR", (int)ChannelSource.TexSecond_Red);
-                channelMixer.SetFloat("_SourceG", (int)ChannelSource.TexSecond_Red);
-                channelMixer.SetFloat("_SourceB", (int)ChannelSource.TexSecond_Red);
-                channelMixer.SetFloat("_SourceA", (int)ChannelSource.TexFirst_Red);
+                Texture2D texMain = TextureConverter.PackGrayscaleTextureToOneChannel(material.GetTexture("_MainTex"), 3);
 
                 pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMain, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Linear));
 
@@ -470,7 +451,7 @@ namespace UnityGLTF.Plugins
                 var baseTex = material.GetTexture("_MainTex");
                 if (baseTex)
                 {
-                    pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, baseTex, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
+                    pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, baseTex, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Linear));
                 }
 
                 pbr.MetallicFactor = 0f;

@@ -17,9 +17,9 @@ namespace UnityGLTF
 
     public static class TextureConverter
     {
+#if RUNTIME
         private static Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
 
-#if RUNTIME
         public static void InjectBundleShaders(Shader[] bundleShaders)
         {
             if (bundleShaders == null) return;
@@ -28,7 +28,11 @@ namespace UnityGLTF
             foreach (var shader in bundleShaders)
             {
                 if (shader != null)
+                {
                     shaders.Add(shader.name, shader);
+
+                    UnityEngine.Debug.Log($"Injected {shader} in TextureConverter");
+                }
             }
         }
 #endif
@@ -62,7 +66,7 @@ namespace UnityGLTF
 #endif
         }
 
-        public static Texture2D Convert(Texture inputTexture, Material mat, string addTag = null)
+        private static Texture2D ApplyBlit(Texture inputTexture, Material mat, string addTag = null)
         {
             if (inputTexture == null)
                 return null;
@@ -197,6 +201,29 @@ namespace UnityGLTF
             return convertedTexture;
         }
 
+        public static Texture2D OverrideAlpha(Texture tex, Texture texWithAlpha)
+        {
+            Material matBlit = new Material(GetShader("Hidden/Blit/SetAlphaFromTexture"));
+            matBlit.SetTexture("_MainTex", tex);
+            matBlit.SetTexture("_AlphaTex", tex);
+            return ApplyBlit(tex, matBlit);
+        }
+
+        public static Texture2D PackGrayscaleTextureToOneChannel(Texture tex, int channel)
+        {
+            Material channelMixer = new Material(GetShader("Hidden/Blit/ChannelMixer"));
+            channelMixer.SetTexture("_TexFirst", tex);
+            channelMixer.SetTexture("_TexSecond", Texture2D.whiteTexture);
+            channelMixer.SetFloat("_SourceR", channel == 0 ? (int)ChannelSource.TexFirst_Red : (int)ChannelSource.TexSecond_Red);
+            channelMixer.SetFloat("_SourceG", channel == 1 ? (int)ChannelSource.TexFirst_Red : (int)ChannelSource.TexSecond_Red);
+            channelMixer.SetFloat("_SourceB", channel == 2 ? (int)ChannelSource.TexFirst_Red : (int)ChannelSource.TexSecond_Red);
+            channelMixer.SetFloat("_SourceA", channel == 3 ? (int)ChannelSource.TexFirst_Red : (int)ChannelSource.TexSecond_Red);
+
+            Texture2D texResult = ApplyBlit(tex, channelMixer);
+
+            return texResult;
+        }
+
         public static Texture2D BlendOverlay(Texture2D texBase, Texture2D texTop, Texture2D texMask, float factor)
         {
             Material mat = new Material(GetShader("Hidden/Blit/BlendOverlay"));
@@ -219,11 +246,23 @@ namespace UnityGLTF
             return convertedTexture;
         }
 
+        public static Texture2D CreateGrayscaleFromAlpha(Texture texMain)
+        {
+            Material channelMixer = new Material(GetShader("Hidden/Blit/ChannelMixer"));
+            channelMixer.SetTexture("_TexFirst", texMain);
+            channelMixer.SetTexture("_TexSecond", Texture2D.whiteTexture);
+            channelMixer.SetFloat("_SourceR", (int)ChannelSource.TexFirst_Alpha);
+            channelMixer.SetFloat("_SourceG", (int)ChannelSource.TexFirst_Alpha);
+            channelMixer.SetFloat("_SourceB", (int)ChannelSource.TexFirst_Alpha);
+            channelMixer.SetFloat("_SourceA", (int)ChannelSource.TexSecond_Red);
+            return ApplyBlit(texMain, channelMixer, "TRANSMISSION");
+        }
+
         public static Texture2D FillAlpha(Texture tex, float alpha = 1.0f)
         {
             Material mat = new Material(GetShader("Hidden/Blit/FillAlpha"));
 
-            return Convert(tex, mat);
+            return ApplyBlit(tex, mat);
         }
 
         static Texture2D ToTexture2D(this RenderTexture rTex)
