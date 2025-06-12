@@ -267,6 +267,34 @@ namespace UnityGLTF.Plugins
 
                 return true;
             }
+            else if (material.shader.name == "p0/Transparent/Reflective/Specular")
+            {
+                // _MainTex is diffuse with alpha
+                // _SpecTex is glossiness
+                // _ReflectColor is specular IOR factor, no tint
+
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
+                pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, material.mainTexture, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
+                pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
+
+                KHR_materials_specular KHRspecular = new KHR_materials_specular();
+                KHRspecular.specularFactor = material.GetColor("_ReflectColor").r;
+                exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
+                if (materialNode.Extensions == null)
+                    materialNode.Extensions = new Dictionary<string, IExtension>();
+                materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
+
+                Texture texGlos = material.GetTexture("_SpecTex");
+                Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
+                Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+                texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
+                pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_SpecTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+
+                materialNode.PbrMetallicRoughness = pbr;
+                materialNode.AlphaMode = AlphaMode.BLEND;
+
+                return true;
+            }
             else if (material.shader.name == "p0/Cutout/Bumped Diffuse")
             {
                 // cant remember why this is empty, probably because default UnityGLTF settings export it fine
