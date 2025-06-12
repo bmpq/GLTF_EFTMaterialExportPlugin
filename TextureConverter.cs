@@ -89,6 +89,13 @@ namespace UnityGLTF
             return convertedTexture;
         }
 
+        public static Texture2D GlosToMetRough(Texture texGlos)
+        {
+            Texture2D texRoughness = Invert(texGlos, false);
+            Texture2D texMetRough = CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+            return texMetRough;
+        }
+
         public static Texture2D Invert(Texture inputTexture)
         {
             if (inputTexture == null) return null;

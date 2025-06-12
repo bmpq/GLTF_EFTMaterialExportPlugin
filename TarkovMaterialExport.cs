@@ -48,8 +48,7 @@ namespace UnityGLTF.Plugins
                 if (texAlbedoSpec == null)
                     texAlbedoSpec = Texture2D.whiteTexture;
 
-                Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
-                Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+                Texture2D texMetRough = TextureConverter.GlosToMetRough(texGlos);
                 texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_SpecMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
@@ -128,8 +127,7 @@ namespace UnityGLTF.Plugins
                 if (texAlbedoSpec == null)
                     texAlbedoSpec = Texture2D.whiteTexture;
 
-                Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
-                Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+                Texture2D texMetRough = TextureConverter.GlosToMetRough(texGlos);
                 texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, TransparentCutoff ? "_MainTex" : "_SpecMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
@@ -268,8 +266,7 @@ namespace UnityGLTF.Plugins
                 DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 Texture texGlos = material.GetTexture("_SpecTex");
-                Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
-                Texture2D texMetRough = TextureConverter.CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+                Texture2D texMetRough = TextureConverter.GlosToMetRough(texGlos);
                 texMetRough.name = texGlos.name + TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_SpecTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
 
