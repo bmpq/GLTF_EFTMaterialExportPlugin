@@ -345,7 +345,6 @@ namespace UnityGLTF.Plugins
                 DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
-
                 var normalTex = material.GetTexture("_BumpMap");
                 if (normalTex && normalTex is Texture2D)
                 {
@@ -371,6 +370,10 @@ namespace UnityGLTF.Plugins
 
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
                 materialNode.PbrMetallicRoughness = pbr;
+
+                KHR_materials_transmission transmission = new KHR_materials_transmission();
+                transmission.transmissionFactor = 1f;
+                DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 var normalTex = material.GetTexture("_BumpMap");
                 if (normalTex && normalTex is Texture2D)

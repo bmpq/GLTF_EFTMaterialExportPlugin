@@ -42,7 +42,7 @@
 
             float4 frag(v2f i) : SV_Target
             {
-                float4 originalColor = tex2D(_MainTex, i.uv)
+                float4 originalColor = tex2D(_MainTex, i.uv);
                 float3 poweredColor = pow(originalColor.rgb, _Exponent);
 
                 return float4(poweredColor, originalColor.a);
