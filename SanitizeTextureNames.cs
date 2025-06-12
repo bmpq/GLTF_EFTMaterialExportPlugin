@@ -14,16 +14,21 @@ namespace UnityGLTF.Plugins
 
     public class SanitizeTextureNamesContext : GLTFExportPluginContext
     {
+        private const string UNNAMED_TEXTURE = "Unnamed_Texture";
+
         public override void BeforeTextureExport(GLTFSceneExporter exporter, ref UniqueTexture texture, string textureSlot)
         {
             texture.Texture.name = SanitizeName(texture.Texture.name);
+
+            if (texture.Texture.name == UNNAMED_TEXTURE)
+                texture.Texture.name += texture.GetHashCode();
         }
 
         public static string SanitizeName(string inputName, char replacementChar = '_')
         {
             if (string.IsNullOrEmpty(inputName))
             {
-                return "Unnamed_Texture";
+                return UNNAMED_TEXTURE;
             }
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder(inputName.Length);

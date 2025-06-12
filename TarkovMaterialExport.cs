@@ -21,7 +21,6 @@ namespace UnityGLTF.Plugins
     {
         private const string TEXNAME_POSTFIX_SPECULAR = "_SPEC";
         private const string TEXNAME_POSTFIX_METALLICROUGHNESS = "_METROUGH";
-        private const string TEXNAME_POSTFIX_TRANSMISSION = "_TRANSMISSION";
 
         public override void AfterSceneExport(GLTFSceneExporter _, GLTFRoot __)
 		{
@@ -331,6 +330,7 @@ namespace UnityGLTF.Plugins
 
                 Texture texRough = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
                 Texture2D texMetRough = TextureConverter.GlosToMetRough(TextureConverter.Invert(texRough));
+                texMetRough.name += TEXNAME_POSTFIX_METALLICROUGHNESS;
                 pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
                 pbr.RoughnessFactor = 1f;
                 materialNode.PbrMetallicRoughness = pbr;

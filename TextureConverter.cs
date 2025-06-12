@@ -66,7 +66,7 @@ namespace UnityGLTF
 #endif
         }
 
-        private static Texture2D ApplyBlit(Texture inputTexture, Material mat, string addTag = null)
+        private static Texture2D ApplyBlit(Texture inputTexture, Material mat)
         {
             if (inputTexture == null)
                 return null;
@@ -83,8 +83,6 @@ namespace UnityGLTF
             GL.sRGBWrite = sRGBWrite;
 
             convertedTexture.name = inputTexture.name;
-            if (!string.IsNullOrEmpty(addTag))
-                convertedTexture.name += $"_{addTag}";
 
             return convertedTexture;
         }
@@ -108,19 +106,7 @@ namespace UnityGLTF
             Material mat = new Material(GetShader("Hidden/Blit/Invert"));
             mat.SetTexture("_MainTex", inputTexture);
 
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(inputTexture.width, inputTexture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(inputTexture, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-            convertedTexture.name = inputTexture.name;
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
+            return ApplyBlit(inputTexture, mat);
         }
 
         public static Texture2D Power(Texture inputTex, float exponent = 2f)
@@ -149,21 +135,7 @@ namespace UnityGLTF
             mat.SetTexture("_BTex", texB);
             mat.SetTexture("_ATex", texA);
 
-            int maxWidth = Mathf.Max(texR.width, texG.width, texB.width, texA.width);
-            int maxHeight = Mathf.Max(texR.height, texG.height, texB.height, texA.height);
-
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(maxWidth, maxHeight, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(Texture2D.blackTexture, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
+            return ApplyBlit(texR, mat);
         }
 
         public static Texture2D Invert(Texture tex, bool invertAlpha = true)
@@ -171,21 +143,9 @@ namespace UnityGLTF
             Shader shaderInvert = GetShader("Hidden/Blit/Invert");
             Material mat = new Material(shaderInvert);
             mat.SetTexture("_MainTex", tex);
-
             mat.SetKeyword(new UnityEngine.Rendering.LocalKeyword(shaderInvert, "INVERT_ALPHA"), invertAlpha);
 
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(tex.width, tex.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(tex, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
+            return ApplyBlit(tex, mat);
         }
 
         public static Texture2D ChannelToGrayscale(Texture tex, int channel)
@@ -195,18 +155,7 @@ namespace UnityGLTF
             mat.SetTexture("_MainTex", tex);
             mat.SetInt("_ChannelSelect", channel);
 
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(tex.width, tex.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(tex, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
+            return ApplyBlit(tex, mat);
         }
 
         public static Texture2D OverrideAlpha(Texture tex, Texture texWithAlpha)
@@ -240,18 +189,7 @@ namespace UnityGLTF
             mat.SetTexture("_MaskTex", texMask);
             mat.SetFloat("_Factor", factor);
 
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(texBase.width, texBase.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(texBase, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
+            return ApplyBlit(texBase, mat);
         }
 
         public static Texture2D CreateGrayscaleFromAlpha(Texture texMain)
@@ -263,7 +201,7 @@ namespace UnityGLTF
             channelMixer.SetFloat("_SourceG", (int)ChannelSource.TexFirst_Alpha);
             channelMixer.SetFloat("_SourceB", (int)ChannelSource.TexFirst_Alpha);
             channelMixer.SetFloat("_SourceA", (int)ChannelSource.TexSecond_Red);
-            return ApplyBlit(texMain, channelMixer, "TRANSMISSION");
+            return ApplyBlit(texMain, channelMixer);
         }
 
         public static Texture2D FillAlpha(Texture tex, float alpha = 1.0f)
