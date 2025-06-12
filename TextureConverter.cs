@@ -92,7 +92,12 @@ namespace UnityGLTF
         public static Texture2D GlosToMetRough(Texture texGlos)
         {
             Texture2D texRoughness = Invert(texGlos, false);
-            Texture2D texMetRough = CombineR(Texture2D.blackTexture, texRoughness, Texture2D.blackTexture, Texture2D.whiteTexture);
+            return RoughToMetRough(texRoughness);
+        }
+
+        public static Texture2D RoughToMetRough(Texture texRough)
+        {
+            Texture2D texMetRough = CombineR(Texture2D.blackTexture, texRough, Texture2D.blackTexture, Texture2D.whiteTexture);
             return texMetRough;
         }
 
@@ -116,6 +121,24 @@ namespace UnityGLTF
             GL.sRGBWrite = sRGBWrite;
 
             return convertedTexture;
+        }
+
+        public static Texture2D Power(Texture inputTex, float exponent = 2f)
+        {
+            Material mat = new Material(GetShader("Hidden/Blit/Power"));
+            mat.SetTexture("_MainTex", inputTex);
+            mat.SetFloat("_Exponent", exponent);
+
+            return ApplyBlit(inputTex, mat);
+        }
+
+        public static Texture2D Multiply(Texture texA, Texture texB)
+        {
+            Material mat = new Material(GetShader("Hidden/Blit/Multiply"));
+            mat.SetTexture("_TexA", texA);
+            mat.SetTexture("_TexB", texB);
+
+            return ApplyBlit(texA, mat);
         }
 
         public static Texture2D CombineR(Texture texR, Texture texG, Texture texB, Texture texA)

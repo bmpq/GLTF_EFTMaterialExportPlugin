@@ -354,6 +354,32 @@ namespace UnityGLTF.Plugins
 
                 return true;
             }
+            else if (material.shader.name == "Transparent/DepthZwrite")
+            {
+                // transparency/glass is handled way different in the game engine vs pbr workflow
+                // this is very much an artistic interpretation of the shader, even more so than in the other shaders
+
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1f };
+                pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
+
+                Texture texDiffuseAlpha = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
+                Texture texA = TextureConverter.Power(texDiffuseAlpha, 2f);
+                Texture texB = TextureConverter.Invert(material.GetTexture("_SpecTex"));
+                Texture texRough = TextureConverter.Multiply(texA, texB);
+                Texture texMetRough = TextureConverter.RoughToMetRough(texRough);
+                texMetRough.name += TEXNAME_POSTFIX_METALLICROUGHNESS;
+
+                pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                materialNode.PbrMetallicRoughness = pbr;
+
+                var normalTex = material.GetTexture("_BumpMap");
+                if (normalTex && normalTex is Texture2D)
+                {
+                    materialNode.NormalTexture = exporter.ExportNormalTextureInfo(normalTex, TextureMapType.Normal, material);
+                }
+
+                return true;
+            }
             else if (material.shader.name.Contains("Cloth/ClothShader"))
             {
                 var pbr = new PbrMetallicRoughness();
@@ -491,6 +517,7 @@ namespace UnityGLTF.Plugins
 
             // could potentially declare transmission to not have any shadow, for cycles render to look better,
             // as opposed to the 'Is Shadow Ray' hack, but then I'd lose control over how much shadow to cast, so I won't use it for now
+            // also it will break everything if there is also opaque materials on the same object
             // DisableShadow(materialNode);
         }
 
