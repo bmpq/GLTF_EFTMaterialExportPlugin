@@ -89,28 +89,6 @@ namespace UnityGLTF
             return convertedTexture;
         }
 
-        public static Texture2D ConvertAlbedoSpecGlosToSpecGloss(Texture inputTextureAlbedoSpec, Texture inputTextureGloss)
-        {
-            Material mat = new Material(GetShader("Hidden/Blit/AlbedoSpecGlosToSpecGloss"));
-            mat.SetTexture("_AlbedoSpecTex", inputTextureAlbedoSpec);
-            mat.SetTexture("_GlossinessTex", inputTextureGloss);
-
-            bool sRGBWrite = GL.sRGBWrite;
-            GL.sRGBWrite = false;
-            RenderTexture temporary = RenderTexture.GetTemporary(inputTextureAlbedoSpec.width, inputTextureAlbedoSpec.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-
-            Graphics.Blit(inputTextureAlbedoSpec, temporary, mat);
-
-            Texture2D convertedTexture = temporary.ToTexture2D();
-
-            convertedTexture.name = inputTextureAlbedoSpec.name + "_SPECGLOS";
-
-            RenderTexture.ReleaseTemporary(temporary);
-            GL.sRGBWrite = sRGBWrite;
-
-            return convertedTexture;
-        }
-
         public static Texture2D Invert(Texture inputTexture)
         {
             if (inputTexture == null) return null;

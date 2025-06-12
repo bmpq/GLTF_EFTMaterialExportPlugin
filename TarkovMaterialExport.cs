@@ -32,9 +32,7 @@ namespace UnityGLTF.Plugins
         {
             if (material.shader.name == "p0/Reflective/Bumped Animated Emissive Specular SMap")
             {
-                KHR_materials_specular KHRspecular = new KHR_materials_specular();
-                var pbr = new PbrMetallicRoughness();
-                pbr.MetallicFactor = 0;
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
 
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
                 float floatDiffuse = material.GetVector("_DefVals").x;
@@ -66,6 +64,7 @@ namespace UnityGLTF.Plugins
                 floatSpec = Mathf.Clamp01(floatSpec);
                 floatSpec *= material.GetVector("_SpecVals").x;
 
+                KHR_materials_specular KHRspecular = new KHR_materials_specular();
                 KHRspecular.specularFactor = floatSpec;
                 KHRspecular.specularColorFactor = colorSpec.ToNumericsColorLinear();
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
@@ -76,10 +75,7 @@ namespace UnityGLTF.Plugins
                 float glossinessFactor = Mathf.Clamp01(floatGlos);
                 pbr.RoughnessFactor = glossinessFactor;
 
-                exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
+                DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 materialNode.PbrMetallicRoughness = pbr;
 
@@ -89,10 +85,9 @@ namespace UnityGLTF.Plugins
                     materialNode.NormalTexture = exporter.ExportNormalTextureInfo(normalTex, TextureMapType.Normal, material);
                 }
 
-                KHR_materials_emissive_strength emissive = new KHR_materials_emissive_strength();
-                emissive.emissiveStrength = material.GetFloat("_EmissionPower");
-                exporter.DeclareExtensionUsage(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, true);
-                materialNode.Extensions[KHR_materials_emissive_strength_Factory.EXTENSION_NAME] = emissive;
+                KHR_materials_emissive_strength emissiveStrength = new KHR_materials_emissive_strength();
+                emissiveStrength.emissiveStrength = material.GetFloat("_EmissionPower");
+                DeclareExtensionEmissiveStrength(exporter, materialNode, emissiveStrength);
 
                 if (material.HasTexture("_EmissionMapAnim1"))
                 {
@@ -111,9 +106,7 @@ namespace UnityGLTF.Plugins
             {
                 bool TransparentCutoff = material.shader.name.Contains("Transparent Cutoff");
 
-                KHR_materials_specular KHRspecular = new KHR_materials_specular();
-                var pbr = new PbrMetallicRoughness();
-                pbr.MetallicFactor = 0;
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1f };
 
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
                 float floatDiffuse = material.GetVector("_DefVals").x;
@@ -149,8 +142,8 @@ namespace UnityGLTF.Plugins
                 {
                     Color colorTint = material.GetColor("_BaseTintColor");
                     Texture2D texDiffuseWithTint = TextureConverter.BlendOverlay(
-                        texAlbedo as Texture2D, 
-                        TextureConverter.CreateSolidColorTexture(2, 2, colorTint), 
+                        texAlbedo as Texture2D,
+                        TextureConverter.CreateSolidColorTexture(2, 2, colorTint),
                         material.GetTexture("_TintMask") as Texture2D, 1f);
 
                     texDiffuseWithTint.name = texAlbedoSpec.name + "_" + ColorUtility.ToHtmlStringRGB(colorTint);
@@ -169,20 +162,18 @@ namespace UnityGLTF.Plugins
                 floatSpec = Mathf.Clamp01(floatSpec);
                 floatSpec *= material.GetVector("_SpecVals").x;
 
+                KHR_materials_specular KHRspecular = new KHR_materials_specular();
                 KHRspecular.specularFactor = floatSpec;
                 KHRspecular.specularColorFactor = colorSpec.ToNumericsColorLinear();
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
                 texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
                 KHRspecular.specularTexture = exporter.ExportTextureInfoWithTextureTransform(material, texSpec, TransparentCutoff ? "_SpecMap" : "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                
+                DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 float floatGlos = material.GetFloat("_Specularness");
                 float glossinessFactor = Mathf.Clamp01(floatGlos);
                 pbr.RoughnessFactor = glossinessFactor;
-
-                exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
 
                 materialNode.PbrMetallicRoughness = pbr;
 
@@ -199,11 +190,10 @@ namespace UnityGLTF.Plugins
 
                     materialNode.EmissiveFactor = material.GetColor("_EmissiveColor").ToNumericsColorLinear();
 
-                    KHR_materials_emissive_strength emissive = new KHR_materials_emissive_strength();
-                    emissive.emissiveStrength = material.GetFloat("_EmissionPower") / 10f; // not sure about this
+                    KHR_materials_emissive_strength emissiveStrength = new KHR_materials_emissive_strength();
+                    emissiveStrength.emissiveStrength = material.GetFloat("_EmissionPower") / 10f; // not sure about this
 
-                    exporter.DeclareExtensionUsage(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, true);
-                    materialNode.Extensions[KHR_materials_emissive_strength_Factory.EXTENSION_NAME] = emissive;
+                    DeclareExtensionEmissiveStrength(exporter, materialNode, emissiveStrength);
                 }
 
                 return true;
@@ -241,10 +231,7 @@ namespace UnityGLTF.Plugins
 
                 materialNode.PbrMetallicRoughness = pbr;
 
-                exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
+                DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 var normalTex = material.GetTexture("_BumpMap");
                 if (normalTex && normalTex is Texture2D)
@@ -261,8 +248,7 @@ namespace UnityGLTF.Plugins
                     KHR_materials_emissive_strength emissive = new KHR_materials_emissive_strength();
                     emissive.emissiveStrength = material.GetFloat("_EmissionPower") / 10f; // there is also _EmissionVisibility, but it seems to multiply diffuse, which doesn't make sense to me, black emission shouldn't make diffuse black
 
-                    exporter.DeclareExtensionUsage(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, true);
-                    materialNode.Extensions[KHR_materials_emissive_strength_Factory.EXTENSION_NAME] = emissive;
+                    DeclareExtensionEmissiveStrength(exporter, materialNode, emissive);
                 }
 
                 return true;
@@ -279,10 +265,7 @@ namespace UnityGLTF.Plugins
 
                 KHR_materials_specular KHRspecular = new KHR_materials_specular();
                 KHRspecular.specularFactor = material.GetColor("_ReflectColor").r;
-                exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
+                DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 Texture texGlos = material.GetTexture("_SpecTex");
                 Texture2D texRoughness = TextureConverter.Invert(texGlos, false);
@@ -307,17 +290,11 @@ namespace UnityGLTF.Plugins
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
                 pbr.BaseColorFactor.A = 1f;
 
-                pbr.MetallicRoughnessTexture = pbr.BaseColorTexture;
-                pbr.RoughnessFactor = 1f;
-                pbr.MetallicFactor = 0f;
+                pbr.MetallicRoughnessTexture = pbr.BaseColorTexture; // todo: check if this is correct
 
-                KHR_materials_transmission transmission = new KHR_materials_transmission();
-                transmission.transmissionFactor = 1f;
-
-                exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_transmission_Factory.EXTENSION_NAME] = transmission;
+                KHR_materials_transmission KHRtransmission = new KHR_materials_transmission();
+                KHRtransmission.transmissionFactor = 1f;
+                DeclareExtensionTransmission(exporter, materialNode, KHRtransmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
                 materialNode.AlphaMode = AlphaMode.BLEND;
@@ -330,11 +307,7 @@ namespace UnityGLTF.Plugins
 
                 KHR_materials_transmission transmission = new KHR_materials_transmission();
                 transmission.transmissionFactor = 1f;
-
-                exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_transmission_Factory.EXTENSION_NAME] = transmission;
+                DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
 
@@ -342,6 +315,8 @@ namespace UnityGLTF.Plugins
             }
             else if (material.shader.name.Contains("Custom/OpticGlass"))
             {
+                // black opaque reflective material
+
                 var pbr = new PbrMetallicRoughness() { MetallicFactor = 1f, RoughnessFactor = 0.05f };
                 pbr.BaseColorFactor = Color.black.ToNumericsColorLinear();
                 materialNode.PbrMetallicRoughness = pbr;
@@ -351,7 +326,7 @@ namespace UnityGLTF.Plugins
 
             else if (material.shader.name.Contains("Transparent/DepthZwrite"))
             {
-                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0f };
 
                 Texture2D texTransmission = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
                 texTransmission = TextureConverter.Invert(texTransmission);
@@ -360,20 +335,12 @@ namespace UnityGLTF.Plugins
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
                 pbr.BaseColorFactor.A = 1f;
 
-                pbr.RoughnessFactor = 0f;
-                pbr.MetallicFactor = 0f;
-
                 KHR_materials_transmission transmission = new KHR_materials_transmission();
                 transmission.transmissionFactor = 1f;
                 transmission.transmissionTexture = exporter.ExportTextureInfoWithTextureTransform(material, texTransmission, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
-
-                exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_transmission_Factory.EXTENSION_NAME] = transmission;
+                DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
-
 
                 var normalTex = material.GetTexture("_BumpMap");
                 if (normalTex && normalTex is Texture2D)
@@ -453,20 +420,12 @@ namespace UnityGLTF.Plugins
 
                 KHR_materials_transmission transmission = new KHR_materials_transmission();
                 transmission.transmissionFactor = 1f;
-
-                exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
-                if (materialNode.Extensions == null)
-                    materialNode.Extensions = new Dictionary<string, IExtension>();
-                materialNode.Extensions[KHR_materials_transmission_Factory.EXTENSION_NAME] = transmission;
+                DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
 
                 materialNode.AlphaMode = AlphaMode.BLEND;
-
-                // in blender can disable shadows with a script, based on this imported custom property
-                var extras = new JObject();
-                extras.Add("disabledShadow", true);
-                materialNode.Extras = extras;
+                DeclareDisableShadow(materialNode);
 
                 return true;
             }
@@ -495,15 +454,49 @@ namespace UnityGLTF.Plugins
                     materialNode.NormalTexture = exporter.ExportNormalTextureInfo(normalTex, TextureMapType.Normal, material);
                 }
 
-                var extras = new JObject();
-                extras.Add("disabledShadow", true);
-                materialNode.Extras = extras;
+                DeclareDisableShadow(materialNode);
 
                 return true;
             }
 
             return false;
 		}
+
+        // in blender can then use a custom script to disable shadows based on this imported custom property
+        private static void DeclareDisableShadow(GLTFMaterial materialNode)
+        {
+            var extras = new JObject();
+            extras.Add("disabledShadow", true);
+            materialNode.Extras = extras;
+        }
+
+        private static void DeclareExtensionSpecular(GLTFSceneExporter exporter, GLTFMaterial materialNode, KHR_materials_specular KHRspecular)
+        {
+            exporter.DeclareExtensionUsage(KHR_materials_specular_Factory.EXTENSION_NAME, true);
+            if (materialNode.Extensions == null)
+                materialNode.Extensions = new Dictionary<string, IExtension>();
+            materialNode.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME] = KHRspecular;
+        }
+
+        private static void DeclareExtensionTransmission(GLTFSceneExporter exporter, GLTFMaterial materialNode, KHR_materials_transmission KHRtransmission)
+        {
+            exporter.DeclareExtensionUsage(KHR_materials_transmission_Factory.EXTENSION_NAME, true);
+            if (materialNode.Extensions == null)
+                materialNode.Extensions = new Dictionary<string, IExtension>();
+            materialNode.Extensions[KHR_materials_transmission_Factory.EXTENSION_NAME] = KHRtransmission;
+
+            // could potentially declare transmission to not have any shadow, for cycles render to look better,
+            // as opposed to the 'Is Shadow Ray' hack, but then I'd lose control over how much shadow to cast, so I won't use it for now
+            // DisableShadow(materialNode);
+        }
+
+        private static void DeclareExtensionEmissiveStrength(GLTFSceneExporter exporter, GLTFMaterial materialNode, KHR_materials_emissive_strength KHRemissive_strength)
+        {
+            exporter.DeclareExtensionUsage(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, true);
+            if (materialNode.Extensions == null)
+                materialNode.Extensions = new Dictionary<string, IExtension>();
+            materialNode.Extensions[KHR_materials_emissive_strength_Factory.EXTENSION_NAME] = KHRemissive_strength;
+        }
 
         static Color Vector4ToColor(Vector4 vector4) => new Color(vector4.x, vector4.y, vector4.z, vector4.w);
     }
