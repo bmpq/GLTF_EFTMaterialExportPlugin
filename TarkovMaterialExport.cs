@@ -321,20 +321,27 @@ namespace UnityGLTF.Plugins
                 return true;
             }
 
-            else if (material.shader.name.Contains("Transparent/DepthZwrite"))
+            else if (material.shader.name == "Transparent/DepthZwriteDithered")
             {
-                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 0f };
+                var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1f };
 
-                Texture2D texTransmission = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
-                texTransmission = TextureConverter.Invert(texTransmission);
-                texTransmission.name += TEXNAME_POSTFIX_TRANSMISSION;
-
+                Texture2D texBaseColor = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_SpecTex"));
+                pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, texBaseColor, "_SpecTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
                 pbr.BaseColorFactor = material.GetColor("_Color").ToNumericsColorLinear();
-                pbr.BaseColorFactor.A = 1f;
+
+                Texture texRough = TextureConverter.CreateGrayscaleFromAlpha(material.GetTexture("_MainTex"));
+                Texture2D texMetRough = TextureConverter.GlosToMetRough(TextureConverter.Invert(texRough));
+                pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetRough, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                pbr.RoughnessFactor = 1f;
+                materialNode.PbrMetallicRoughness = pbr;
+
+                KHR_materials_specular KHRspecular = new KHR_materials_specular();
+                KHRspecular.specularFactor = material.GetFloat("_Glossness") / 5f; // goes up to 50, but has no noticable visual effect
+                KHRspecular.specularColorFactor = material.GetColor("_SpecColor").ToNumericsColorLinear();
+                DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 KHR_materials_transmission transmission = new KHR_materials_transmission();
                 transmission.transmissionFactor = 1f;
-                transmission.transmissionTexture = exporter.ExportTextureInfoWithTextureTransform(material, texTransmission, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
                 DeclareExtensionTransmission(exporter, materialNode, transmission);
 
                 materialNode.PbrMetallicRoughness = pbr;
