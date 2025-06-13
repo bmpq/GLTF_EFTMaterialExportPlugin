@@ -135,7 +135,7 @@ namespace UnityGLTF
             mat.SetTexture("_BTex", texB);
             mat.SetTexture("_ATex", texA);
 
-            return ApplyBlit(texR, mat);
+            return ApplyBlit(texG, mat);
         }
 
         public static Texture2D Invert(Texture tex, bool invertAlpha = true)
