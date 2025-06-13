@@ -7,27 +7,27 @@ using static UnityGLTF.GLTFSceneExporter;
 
 namespace UnityGLTF.Plugins
 {
-	public class TarkovMaterialExport : GLTFExportPlugin
-	{
-		public override string DisplayName => "Convert Tarkov shaders and textures";
-		public override string Description => "";
-		public override GLTFExportPluginContext CreateInstance(ExportContext context)
-		{
-			return new TarkovMaterialExportContext();
-		}
-	}
-	
-	public class TarkovMaterialExportContext : GLTFExportPluginContext
+    public class TarkovMaterialExport : GLTFExportPlugin
+    {
+        public override string DisplayName => "Convert Tarkov shaders and textures";
+        public override string Description => "";
+        public override GLTFExportPluginContext CreateInstance(ExportContext context)
+        {
+            return new TarkovMaterialExportContext();
+        }
+    }
+
+    public class TarkovMaterialExportContext : GLTFExportPluginContext
     {
         private const string TEXNAME_POSTFIX_SPECULAR = "_SPEC";
         private const string TEXNAME_POSTFIX_METALLICROUGHNESS = "_METROUGH";
 
         public override void AfterSceneExport(GLTFSceneExporter _, GLTFRoot __)
-		{
-			RenderTexture.active = null;
-		}
+        {
+            RenderTexture.active = null;
+        }
 
-		public override bool BeforeMaterialExport(GLTFSceneExporter exporter, GLTFRoot gltfRoot, Material material, GLTFMaterial materialNode)
+        public override bool BeforeMaterialExport(GLTFSceneExporter exporter, GLTFRoot gltfRoot, Material material, GLTFMaterial materialNode)
         {
             if (material.shader.name == "p0/Reflective/Bumped Animated Emissive Specular SMap")
             {
@@ -165,7 +165,7 @@ namespace UnityGLTF.Plugins
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
                 texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
                 KHRspecular.specularTexture = exporter.ExportTextureInfoWithTextureTransform(material, texSpec, TransparentCutoff ? "_SpecMap" : "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
-                
+
                 DeclareExtensionSpecular(exporter, materialNode, KHRspecular);
 
                 float floatGlos = material.GetFloat("_Specularness");
@@ -493,7 +493,7 @@ namespace UnityGLTF.Plugins
             }
 
             return false;
-		}
+        }
 
         // in blender can then use a custom script to disable shadows based on this imported custom property
         private static void DeclareDisableShadow(GLTFMaterial materialNode)
