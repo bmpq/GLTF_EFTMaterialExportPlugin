@@ -491,6 +491,15 @@ namespace UnityGLTF.Plugins
 
                 return true;
             }
+            else if (material.shader.name == "Decal/DeferredDecalDiffuseNormalsDynamicEditor")
+            {
+                // not visible in-game, nor as decompiled in editor. legacy shader?
+
+                materialNode.AlphaMode = AlphaMode.BLEND;
+                materialNode.PbrMetallicRoughness = new PbrMetallicRoughness() { BaseColorFactor = new GLTF.Math.Color(1, 1, 1, 0f) };
+
+                return true;
+            }
 
             return false;
         }
