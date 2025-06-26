@@ -211,7 +211,9 @@ namespace UnityGLTF.Plugins
                 Texture texAlbedoSpec = material.GetTexture("_MainTex");
                 if (texAlbedoSpec == null)
                     texAlbedoSpec = Texture2D.whiteTexture;
-                pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, texAlbedoSpec, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
+
+                Texture2D texAlbedo = TextureConverter.FillAlpha(texAlbedoSpec, 1f);
+                pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, texAlbedo, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
 
                 Texture2D texSpec = TextureConverter.ChannelToGrayscale(texAlbedoSpec, 3);
                 texSpec.name = texAlbedoSpec.name + TEXNAME_POSTFIX_SPECULAR;
