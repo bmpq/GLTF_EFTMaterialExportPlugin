@@ -29,6 +29,9 @@ namespace UnityGLTF.Plugins
 
         public override bool BeforeMaterialExport(GLTFSceneExporter exporter, GLTFRoot gltfRoot, Material material, GLTFMaterial materialNode)
         {
+            try
+            { 
+
             if (material.shader.name == "p0/Reflective/Bumped Animated Emissive Specular SMap")
             {
                 var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
@@ -503,6 +506,11 @@ namespace UnityGLTF.Plugins
                 return true;
             }
 
+            }
+            catch (System.Exception ex)
+            { 
+                Debug.LogException(ex); 
+            }
             return false;
         }
 
