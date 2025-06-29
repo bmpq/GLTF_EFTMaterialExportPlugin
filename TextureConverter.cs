@@ -95,7 +95,13 @@ namespace UnityGLTF
 
         public static Texture2D RoughToMetRough(Texture texRough)
         {
-            Texture2D texMetRough = CombineR(Texture2D.blackTexture, texRough, Texture2D.blackTexture, Texture2D.whiteTexture);
+            // in case a normal map is used as a glossiness map, the red channel won't work, so we use the green channel
+            // old materials like the ones on interchange have a bad habit of not having slot appropriate bespoke textures
+            // and instead substitute by using textures that were intended for other uses, ultimately killing my entire conversion approach in concept.
+            // but more often than not, it turns out fine.
+            Texture2D texG = ChannelToGrayscale(texRough, 1);
+
+            Texture2D texMetRough = CombineR(Texture2D.blackTexture, texG, Texture2D.blackTexture, Texture2D.whiteTexture);
             return texMetRough;
         }
 

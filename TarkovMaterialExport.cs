@@ -125,7 +125,7 @@ namespace UnityGLTF.Plugins
                 }
 
                 if (texGlos == null)
-                    texGlos = Texture2D.whiteTexture;
+                    texGlos = Texture2D.blackTexture;
                 if (texAlbedoSpec == null)
                     texAlbedoSpec = Texture2D.whiteTexture;
 
