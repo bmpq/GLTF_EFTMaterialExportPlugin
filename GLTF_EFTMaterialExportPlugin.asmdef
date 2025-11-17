@@ -1,0 +1,18 @@
+{
+    "name": "GLTF_EFTMaterialExportPlugin",
+    "rootNamespace": "",
+    "references": [
+        "GUID:18d18f811ba286c49814567a3cfba688",
+        "GUID:78eed79366eb2824c853b25847bba69b",
+        "GUID:40f39bff7bc9be34182ebe488fcf8228"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

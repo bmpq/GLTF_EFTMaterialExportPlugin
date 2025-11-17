@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <SPTPath>E:\Games\SPT_3.11</SPTPath>
     <UnityEditorPath>T:\extract\UNITYPROJECT_EFT35392\Assets\GLTF_EFTMaterialExportPlugin</UnityEditorPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
