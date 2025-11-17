@@ -279,11 +279,6 @@ namespace UnityGLTF.Plugins
 
                 return true;
             }
-            else if (material.shader.name == "p0/Cutout/Bumped Diffuse")
-            {
-                // cant remember why this is empty, probably because default UnityGLTF settings export it fine
-                material.EnableKeyword("_BUMPMAP");
-            }
             else if (material.shader.name == "Global Fog/Transparent Reflective Specular")
             {
                 var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
@@ -400,11 +395,14 @@ namespace UnityGLTF.Plugins
                 pbr.BaseColorTexture = exporter.ExportTextureInfoWithTextureTransform(material, mainTex, "_MainTex", exporter.GetExportSettingsForSlot(TextureMapType.BaseColor));
                 materialNode.AlphaMode = AlphaMode.MASK;
 
-                Texture2D texRoughness = TextureConverter.Invert(material.GetTexture("_GlossMap"));
-                Texture2D texMetallicRoughness = TextureConverter.PackGrayscaleTextureToOneChannel(texRoughness, 1);
-                texMetallicRoughness.name += TEXNAME_POSTFIX_METALLICROUGHNESS;
-
-                pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetallicRoughness, "_GlossMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                Texture texGlos = material.GetTexture("_GlossMap");
+                if (texGlos != null)
+                {
+                    Texture2D texRoughness = TextureConverter.Invert(texGlos);
+                    Texture2D texMetallicRoughness = TextureConverter.PackGrayscaleTextureToOneChannel(texRoughness, 1);
+                    texMetallicRoughness.name += TEXNAME_POSTFIX_METALLICROUGHNESS;
+                    pbr.MetallicRoughnessTexture = exporter.ExportTextureInfoWithTextureTransform(material, texMetallicRoughness, "_GlossMap", exporter.GetExportSettingsForSlot(TextureMapType.Custom_Unknown));
+                }
 
                 pbr.RoughnessFactor = 1f - material.GetFloat("_Glossiness");
                 pbr.MetallicFactor = (material.GetFloat("_Metallic") + 1f) / 2f;
@@ -436,7 +434,7 @@ namespace UnityGLTF.Plugins
                 exporter.ExportTextureInfo(material.GetTexture("_BumpMap1"), TextureMapType.Normal);
                 exporter.ExportTextureInfo(material.GetTexture("_BumpMap2"), TextureMapType.Normal);
 
-                // maybe think of something. it must be possible to bake with a shader. not sure about tiling tho
+                // maybe think of something. it must be possible to bake with a custom logic shader. not sure about tiling tho
 
                 if (material.shader.name.Contains("Gloss"))
                 {
@@ -505,11 +503,14 @@ namespace UnityGLTF.Plugins
 
                 return true;
             }
-
+            else if (material.shader.name.Contains("Cutout"))
+            {
+                materialNode.AlphaMode = AlphaMode.MASK;
+            }
             }
             catch (System.Exception ex)
             { 
-                Debug.LogException(ex); 
+                Debug.LogException(ex, material); 
             }
             return false;
         }

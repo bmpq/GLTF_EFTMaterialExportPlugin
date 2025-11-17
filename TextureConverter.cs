@@ -212,6 +212,7 @@ namespace UnityGLTF
 
         public static Texture2D FillAlpha(Texture tex, float alpha = 1.0f)
         {
+            return tex as Texture2D;
             Material mat = new Material(GetShader("Hidden/Blit/FillAlpha"));
 
             return ApplyBlit(tex, mat);
