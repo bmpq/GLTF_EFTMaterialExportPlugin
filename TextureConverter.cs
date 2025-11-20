@@ -17,7 +17,7 @@ namespace UnityGLTF
 
     public static class TextureConverter
     {
-#if RUNTIME
+#if !UNITY_EDITOR
         private static Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
 
         public static void InjectBundleShaders(Shader[] bundleShaders)
@@ -51,7 +51,7 @@ namespace UnityGLTF
                     Debug.Log(shaderName + " not found in Resources");
             }
             return shader;
-#elif RUNTIME
+#else
             if (shaders.Count == 0)
             {
                 Debug.LogError($"[TextureConverter] Shader dictionary is not initialized. Was InjectFromBundle called?");
