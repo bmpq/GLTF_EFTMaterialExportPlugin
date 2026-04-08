@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GLTF.Schema;
+using GLTF_EFTMaterialExportPlugin;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityGLTF.Extensions;

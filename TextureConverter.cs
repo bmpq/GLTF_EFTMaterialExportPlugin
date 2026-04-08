@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityGLTF
+namespace GLTF_EFTMaterialExportPlugin
 {
     public enum ChannelSource
     {
